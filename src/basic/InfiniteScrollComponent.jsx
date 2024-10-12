@@ -1,4 +1,5 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
+
 
 export default function InfiniteScrollComponent() {
     const fileList = [
@@ -8,10 +9,10 @@ export default function InfiniteScrollComponent() {
         // 더 많은 이미지 파일 추가
     ];
     const [data, setData] = useState(fileList.slice(0, 2));
-    const loader = useRef(null);
+    const loader = useRef(null);   // 마지막 요소 참조
 
     // 스크롤할 때마다 이미지를 추가하는 함수
-    const getFiles = useCallback((prev) => {
+    const getFiles = useCallback(() => {
         setData((prev) => {
             const nextIndex = prev.length;
             return [...prev, fileList[nextIndex % fileList.length]]; // 새로운 이미지를 추가
@@ -43,75 +44,30 @@ export default function InfiniteScrollComponent() {
     }, [handleObserver]);
 
     return (
-        <div className="box">
+        <div className="container">
             {data.map((fileName, idx) => (
-                <div key={idx} style={{ textAlign: "center" }}>
-                    {/* 파일 이름을 이미지 경로로 설정 */}
-                    <img
-                        src={`/upload/${fileName}`}
-                        alt={fileName}
-                        width="600"
-                        style={{ marginBottom: '20px' }}
-                    />
-                    <p>{fileName}</p> {/* 파일 이름 출력 */}
+                <div
+                    key={idx}
+                    className="row align-items-center bg-info-subtle mb-3 p-3"
+                    style={{ display: 'flex', alignItems: 'center', marginBottom:'20px' }}         // flexbox : 수직 가운데 정렬 적용
+                >
+                    {/* 파일 이름을 이미지 경로로 설정 : 좌측 이미지 */}
+                    <div className="col-md-6 text-center">
+                        <img
+                            src={`/upload/${fileName}`}
+                            alt={fileName}
+                            className="img-fluid"
+                            style={{width:'500px', maxWidth: '100%', height: 'auto' }}
+                        />
+                    </div>
+                    {/* 우측 텍스트 */}
+                    <div className="col-md-6" style={{flex: 1, textAlign: 'left', paddingLeft: '20px'}}>
+                        <h5>{fileName}</h5>
+                        <p>Some description about {fileName}.</p>
+                    </div>
                 </div>
             ))}
-            <div ref={loader} />
+            <div ref={loader}/>
         </div>
-    );
+    )
 }
-
-
-
-
-/* App 백업
-const [data, setData] = useState([]);  // 데이터를 저장할 상태
-    const [page, setPage] = useState(1);   // 페이지 번호 상태
-    const [isLoading, setIsLoading] = useState(false); // 로딩 상태
-
-    const observerRef = useRef(null); // 스크롤을 감지할 옵저버
-    const lastElementRef = useRef(null); // 마지막 요소 참조
-
-    useEffect(() => {
-        fetchData(); // 컴포넌트 마운트 시 초기 데이터 로드
-    }, [page]);
-
-    const fetchData = async () => {
-        setIsLoading(true);
-        const response = await fetch(`https://your-api.com/data?page=${page}`);
-        const newData = await response.json();
-        setData(prevData => [...prevData, ...newData]); // 이전 데이터에 새로운 데이터 추가
-        setIsLoading(false);
-    };
-
-    // IntersectionObserver 설정
-    useEffect(() => {
-        observerRef.current = new IntersectionObserver(entries => {
-            if (entries[0].isIntersecting) {
-                setPage(prevPage => prevPage + 1); // 새로운 페이지 요청
-            }
-        });
-        if (lastElementRef.current) {
-            observerRef.current.observe(lastElementRef.current);
-        }
-        return () => {
-            if (lastElementRef.current) {
-                observerRef.current.unobserve(lastElementRef.current);
-            }
-        };
-    }, []);
-
-    return (
-        <div>
-            {data.map((item, index) => (
-                <div key={index} style={{ margin: '20px 0' }}>
-                    <img src={item.imageUrl} alt="이미지" width="100%" />
-                    <p>{item.text}</p>
-                </div>
-            ))}
-            <div ref={lastElementRef}></div>
-{isLoading && <p>로딩 중...</p>}
-</div>
-);
-
-*/

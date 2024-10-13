@@ -69,3 +69,17 @@
 .navbar a:hover {
   color: #007bff;
 }
+
+/* 페이지네이션 버튼 스타일 */
+.pagination button {
+  margin: 0 5px;
+  padding: 5px 10px;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  cursor: pointer;
+}
+
+.pagination button.active {
+  background-color: #007bff;
+  color: white;
+}

@@ -1,17 +1,29 @@
 import { useState, useEffect } from 'react';
 
 // 게시글 더미 데이터 (예시)
-const posts = [
-    { postId: 1, title: '문의 1', category: '문의', status: 'OPEN', createdAt: '2023-10-11' },
-    { postId: 2, title: '의뢰 1', category: '의뢰', status: 'CLOSED', createdAt: '2023-10-10' },
-    { postId: 3, title: '문의 2', category: '문의', status: 'PENDING', createdAt: '2023-10-09' },
-    { postId: 4, title: '의뢰 2', category: '의뢰', status: 'OPEN', createdAt: '2023-10-08' },
-];
+const posts = Array.from({ length: 100 }, (_, i) => ({
+    postId: i + 1,
+    title: `게시글 ${i + 1}`,
+    category: i % 2 === 0 ? '문의' : '의뢰',
+    status: i % 3 === 0 ? 'OPEN' : 'CLOSED',
+    createdAt: `2023-10-${String(i % 30).padStart(2, '0')}`
+}));
+
+const MAX_PAGES_DISPLAY = 10; // 최대 페이지네이션 버튼 수
 
 export default function BulletinBoard() {
     const [filteredPosts, setFilteredPosts] = useState(posts);  // 필터링된 게시글 리스트
     const [activeTab, setActiveTab] = useState('전체');         // 현재 활성화된 탭
     const [searchQuery, setSearchQuery] = useState('');         // 검색어 상태
+    const [currentPage, setCurrentPage] = useState(1);          // 현재 페이지 상태
+
+    const postsPerPage = 5;                                   // 한 페이지에 보여줄 게시글 수
+    const totalPages = Math.ceil(filteredPosts.length / postsPerPage); // 총 페이지 수
+
+    // 탭이나 검색어가 변경될 때마다 필터링 처리
+    useEffect(() => {
+        handleSearch();
+    }, [activeTab, searchQuery]);
 
     // 카테고리와 검색어 필터링 처리 함수
     const handleSearch = () => {
@@ -20,6 +32,7 @@ export default function BulletinBoard() {
                 post.title.toLowerCase().includes(searchQuery.toLowerCase()); // 제목 검색 필터
         });
         setFilteredPosts(filtered);
+        setCurrentPage(1); // 검색 시 첫 페이지로 이동
     };
 
     // 탭 변경 함수
@@ -34,6 +47,27 @@ export default function BulletinBoard() {
             handleSearch(); // 엔터 키 입력 시 검색 실행
         }
     };
+
+    // 현재 페이지에 해당하는 게시글 가져오기
+    const indexOfLastPost = currentPage * postsPerPage;
+    const indexOfFirstPost = indexOfLastPost - postsPerPage;
+    const currentPosts = filteredPosts.slice(indexOfFirstPost, indexOfLastPost);
+
+
+    // 페이지 이동 처리 함수
+    const handlePageChange = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
+
+    // 페이지네이션 버튼을 동적으로 생성하는 함수
+    const getPageNumbers = () => {
+        let startPage = Math.max(1, currentPage - Math.floor(MAX_PAGES_DISPLAY / 2));
+        let endPage = Math.min(startPage + MAX_PAGES_DISPLAY - 1, totalPages);
+
+        startPage = endPage === totalPages ? endPage-MAX_PAGES_DISPLAY+1 : startPage;
+        return Array.from({ length: endPage - startPage + 1 }, (_, idx) => startPage + idx);
+    };
+
 
     return (
         <div className="container">
@@ -78,8 +112,8 @@ export default function BulletinBoard() {
                 </tr>
                 </thead>
                 <tbody>
-                {filteredPosts.length > 0 ? (
-                    filteredPosts.map(post => (
+                {currentPosts.length > 0 ? (
+                    currentPosts.map(post => (
                         <tr key={post.postId}>
                             <td style={{ border: '1px solid #ddd', padding: '8px' }}>{post.title}</td>
                             <td style={{ border: '1px solid #ddd', padding: '8px' }}>{post.category}</td>
@@ -96,6 +130,29 @@ export default function BulletinBoard() {
                 )}
                 </tbody>
             </table>
+
+            {/* 페이지네이션 */}
+            {totalPages > 1 && (
+                <div className="pagination" style={{ marginTop: '20px', textAlign: 'center' }}>
+                    {getPageNumbers().map(pageNumber => (
+                        <button
+                            key={pageNumber}
+                            onClick={() => handlePageChange(pageNumber)}
+                            style={{
+                                margin: '0 5px',
+                                padding: '5px 10px',
+                                backgroundColor: currentPage === pageNumber ? '#007bff' : '#f0f0f0',
+                                color: currentPage === pageNumber ? 'white' : 'black',
+                                border: '1px solid #ccc',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            {pageNumber}
+                        </button>
+                    ))}
+                </div>
+            )}
+
         </div>
     );
 }
